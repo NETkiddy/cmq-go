@@ -2,7 +2,7 @@ package test
 
 import (
 	"testing"
-	"golang.oa.com/marketing-cloud/golang/cmq-go"
+	"github.com/NETkiddy/cmq-go"
 )
 
 var secretId = "YourTencentSecretId"
