@@ -17,6 +17,14 @@ func NewAccount(endpoint, secretId, secretKey string) *Account {
 	}
 }
 
+func (this *Account) SetProxy(proxyUrl string) {
+	this.client.setProxy(proxyUrl)
+}
+
+func (this *Account) UnsetProxy() {
+	this.client.unsetProxy()
+}
+
 func (this *Account) setSignMethod(method string) (err error) {
 	return this.client.setSignMethod(method)
 }
