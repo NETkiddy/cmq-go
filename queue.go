@@ -80,6 +80,10 @@ func (this *Queue) SendMessage(msgBody string) (string, error) {
 	return _sendMessage(this.client, msgBody, this.queueName, 0)
 }
 
+func (this *Queue) SendDelayMessage(msgBody string, delaySeconds int) (string, error) {
+	return _sendMessage(this.client, msgBody, this.queueName, delaySeconds)
+}
+
 func _sendMessage(client *CMQClient, msgBody, queueName string, delaySeconds int) (messageId string, err error) {
 	param := make(map[string]string)
 	param["queueName"] = queueName
@@ -98,6 +102,10 @@ func _sendMessage(client *CMQClient, msgBody, queueName string, delaySeconds int
 
 func (this *Queue) BatchSendMessage(msgBodys []string) ([]string, error) {
 	return _batchSendMessage(this.client, msgBodys, this.queueName, 0)
+}
+
+func (this *Queue) BatchSendDelayMessage(msgBodys []string, delaySeconds int) ([]string, error) {
+	return _batchSendMessage(this.client, msgBodys, this.queueName, delaySeconds)
 }
 
 func _batchSendMessage(client *CMQClient, msgBodys []string, queueName string, delaySeconds int) (messageIds []string, err error) {
@@ -175,16 +183,16 @@ func (this *Queue) BatchReceiveMessage(numOfMsg, pollingWaitSeconds int) (msgs [
 		return
 	}
 	msgInfoList := resMap["msgInfoList"].([]interface{})
-	for _, v := range msgInfoList{
+	for _, v := range msgInfoList {
 		msgInfo := v.(map[string]interface{})
 		msg := Message{}
 		msg.MsgId = msgInfo["msgId"].(string)
 		msg.ReceiptHandle = msgInfo["receiptHandle"].(string)
 		msg.MsgBody = msgInfo["msgBody"].(string)
 		msg.EnqueueTime = int64(msgInfo["enqueueTime"].(float64))
-		msg.NextVisibleTime =  int64(msgInfo["nextVisibleTime"].(float64))
-		msg.FirstDequeueTime =  int64(msgInfo["firstDequeueTime"].(float64))
-		msg.DequeueCount =  int(msgInfo["dequeueCount"].(float64))
+		msg.NextVisibleTime = int64(msgInfo["nextVisibleTime"].(float64))
+		msg.FirstDequeueTime = int64(msgInfo["firstDequeueTime"].(float64))
+		msg.DequeueCount = int(msgInfo["dequeueCount"].(float64))
 
 		msgs = append(msgs, msg)
 	}
