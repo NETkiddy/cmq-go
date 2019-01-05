@@ -20,14 +20,14 @@ func Test_CreateQueue(t *testing.T) {
 	meta.MaxMsgSize = 1048576
 	meta.MsgRetentionSeconds = 345600
 
-	err := account.CreateQueue("queue-test-001", meta)
+	err, _ := account.CreateQueue("queue-test-001", meta)
 	if err != nil {
 		t.Errorf("queue-test-001 created failed, %v", err.Error())
 		return
 	}
 	t.Log("queue-test-001 created")
 
-	err = account.CreateQueue("queue-test-002", meta)
+	err, _ = account.CreateQueue("queue-test-002", meta)
 	if err != nil {
 		t.Errorf("queue-test-002 created failed, %v", err.Error())
 		return
@@ -38,7 +38,7 @@ func Test_CreateQueue(t *testing.T) {
 // 列出当前帐号下所有队列名字
 func Test_ListQueue(t *testing.T) {
 	account := cmq_go.NewAccount(endpointQueue, secretId, secretKey)
-	totalCount, queueList, err := account.ListQueue("", -1, -1)
+	totalCount, queueList, err, _ := account.ListQueue("", -1, -1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -50,7 +50,7 @@ func Test_ListQueue(t *testing.T) {
 // 删除队列
 func Test_DeleteQueue(t *testing.T) {
 	account := cmq_go.NewAccount(endpointQueue, secretId, secretKey)
-	err := account.DeleteQueue("queue-test-002")
+	err, _ := account.DeleteQueue("queue-test-002")
 	if err != nil {
 		t.Error(err)
 		return
@@ -76,7 +76,7 @@ func Test_SetQueueAttributes(t *testing.T) {
 
 	queue := account.GetQueue("queue-test-001")
 
-	err := queue.SetQueueAttributes(meta)
+	err, _ := queue.SetQueueAttributes(meta)
 	if err != nil {
 		t.Error(err)
 		return
@@ -88,7 +88,7 @@ func Test_SetQueueAttributes(t *testing.T) {
 func Test_GetQueueAttributes(t *testing.T) {
 	account := cmq_go.NewAccount(endpointQueue, secretId, secretKey)
 	queue := account.GetQueue("queue-test-001")
-	newMeta, err := queue.GetQueueAttributes()
+	newMeta, err, _ := queue.GetQueueAttributes()
 	if err != nil {
 		t.Error(err)
 		return
@@ -101,21 +101,27 @@ func Test_SendReceiveDeleteMessage(t *testing.T) {
 	account := cmq_go.NewAccount(endpointQueue, secretId, secretKey)
 	queue := account.GetQueue("queue-test-001")
 	// send
-	msgId, err := queue.SendMessage("hello world")
+	msgId, err, _ := queue.SendMessage("hello world")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	t.Logf("SendMessage msgId: %v", msgId)
 	// receive
-	msg, err := queue.ReceiveMessage(10)
+	msg, err, code := queue.ReceiveMessage(10)
 	if err != nil {
-		t.Error(err)
-		return
+		if code == 7000{
+			t.Logf("no message")
+		}else if code == 6070{
+			t.Logf("too many unacked(inactive messages or delayed messages)")
+		}else {
+			t.Error(err)
+			return
+		}
 	}
 	t.Logf("ReceiveMessage msgId: %v", msg.MsgId)
 	// delete
-	err = queue.DeleteMessage(msg.ReceiptHandle)
+	err, _ = queue.DeleteMessage(msg.ReceiptHandle)
 	if err != nil {
 		t.Error(err)
 		return
@@ -129,14 +135,14 @@ func Test_BatchSendReceiveDeleteMessage(t *testing.T) {
 	queue := account.GetQueue("queue-test-001")
 	// batch send
 	msgBodys := []string{"hello world", "foo", "bar"}
-	msgIds, err := queue.BatchSendMessage(msgBodys)
+	msgIds, err, _ := queue.BatchSendMessage(msgBodys)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	t.Logf("BatchSendMessage msgId: %v", msgIds)
 	// batch receive
-	msgs, err := queue.BatchReceiveMessage(10, 10)
+	msgs, err, _ := queue.BatchReceiveMessage(10, 10)
 	if err != nil {
 		t.Error(err)
 		return
@@ -149,7 +155,7 @@ func Test_BatchSendReceiveDeleteMessage(t *testing.T) {
 	}
 	t.Logf("BatchReceiveMessage msgIds: %v", msgIds)
 	// batch delete
-	err = queue.BatchDeleteMessage(handlers)
+	err, _ = queue.BatchDeleteMessage(handlers)
 	if err != nil {
 		t.Error(err)
 		return

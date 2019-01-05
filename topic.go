@@ -2,7 +2,6 @@ package cmq_go
 
 import (
 	"strconv"
-	"log"
 	"fmt"
 )
 
@@ -18,10 +17,11 @@ func NewTopic(topicName string, client *CMQClient) (queue *Topic) {
 	}
 }
 
-func (this *Topic) SetTopicAttributes(maxMsgSize int) (err error) {
+func (this *Topic) SetTopicAttributes(maxMsgSize int) (err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	if maxMsgSize < 1024 || maxMsgSize > 1048576 {
 		err = fmt.Errorf("Invalid parameter maxMsgSize < 1KB or maxMsgSize > 1024KB")
-		log.Printf("%v", err.Error())
+		//log.Printf("%v", err.Error())
 		return
 	}
 	param := make(map[string]string)
@@ -30,39 +30,43 @@ func (this *Topic) SetTopicAttributes(maxMsgSize int) (err error) {
 		param["maxMsgSize"] = strconv.Itoa(maxMsgSize)
 	}
 
-	_, err = doCall(this.client, param, "SetTopicAttributes")
+	_, err, code = doCall(this.client, param, "SetTopicAttributes")
 	if err != nil {
-		log.Printf("client.call SetTopicAttributes failed: %v\n", err.Error())
+		//log.Printf("client.call SetTopicAttributes failed: %v\n", err.Error())
 		return
 	}
 	return
 }
 
-func (this *Topic) GetTopicAttributes() (meta TopicMeta, err error) {
+func (this *Topic) GetTopicAttributes() (meta TopicMeta, err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = this.topicName
 
-	resMap, err := doCall(this.client, param, "GetTopicAttributes")
+	resMap, err, code := doCall(this.client, param, "GetTopicAttributes")
 	if err != nil {
-		log.Printf("client.call GetTopicAttributes failed: %v\n", err.Error())
+		//log.Printf("client.call GetTopicAttributes failed: %v\n", err.Error())
 		return
 	}
 	pmeta := NewTopicMeta()
 	pmeta.MsgCount = int(resMap["msgCount"].(float64))
-	pmeta.MaxMsgSize =  int(resMap["maxMsgSize"].(float64))
-	pmeta.MsgRetentionSeconds =  int(resMap["msgRetentionSeconds"].(float64))
-	pmeta.CreateTime =  int(resMap["createTime"].(float64))
-	pmeta.LastModifyTime =  int(resMap["lastModifyTime"].(float64))
+	pmeta.MaxMsgSize = int(resMap["maxMsgSize"].(float64))
+	pmeta.MsgRetentionSeconds = int(resMap["msgRetentionSeconds"].(float64))
+	pmeta.CreateTime = int(resMap["createTime"].(float64))
+	pmeta.LastModifyTime = int(resMap["lastModifyTime"].(float64))
 
 	meta = *pmeta
 	return
 }
 
-func (this *Topic) PublishMessage(message string) (msgId string, err error) {
-	return _publishMessage(this.client, this.topicName, message, nil, "")
+func (this *Topic) PublishMessage(message string) (msgId string, err error, code int) {
+	msgId, err, code = _publishMessage(this.client, this.topicName, message, nil, "")
+	return
 }
 
-func _publishMessage(client *CMQClient, topicName, msg string, tagList []string, routingKey string) (msgId string, err error) {
+func _publishMessage(client *CMQClient, topicName, msg string, tagList []string, routingKey string) (
+	msgId string, err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = topicName
 	param["msgBody"] = msg
@@ -74,9 +78,9 @@ func _publishMessage(client *CMQClient, topicName, msg string, tagList []string,
 			param["msgTag."+strconv.Itoa(i+1)] = tag
 		}
 	}
-	resMap, err := doCall(client, param, "PublishMessage")
+	resMap, err, code := doCall(client, param, "PublishMessage")
 	if err != nil {
-		log.Printf("client.call GetTopicAttributes failed: %v\n", err.Error())
+		//log.Printf("client.call GetTopicAttributes failed: %v\n", err.Error())
 		return
 	}
 	msgId = resMap["msgId"].(string)
@@ -84,12 +88,14 @@ func _publishMessage(client *CMQClient, topicName, msg string, tagList []string,
 	return
 }
 
-
-func (this *Topic) BatchPublishMessage(msgList []string) (msgIds []string, err error) {
-	return _batchPublishMessage(this.client, this.topicName, msgList, nil, "")
+func (this *Topic) BatchPublishMessage(msgList []string) (msgIds []string, err error, code int) {
+	msgIds, err, code = _batchPublishMessage(this.client, this.topicName, msgList, nil, "")
+	return
 }
 
-func _batchPublishMessage(client *CMQClient, topicName string, msgList, tagList []string, routingKey string) (msgIds []string, err error) {
+func _batchPublishMessage(client *CMQClient, topicName string, msgList, tagList []string, routingKey string) (
+	msgIds []string, err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = topicName
 	if routingKey != "" {
@@ -106,9 +112,9 @@ func _batchPublishMessage(client *CMQClient, topicName string, msgList, tagList 
 		}
 	}
 
-	resMap, err := doCall(client, param, "BatchPublishMessage")
+	resMap, err, code := doCall(client, param, "BatchPublishMessage")
 	if err != nil {
-		log.Printf("client.call BatchPublishMessage failed: %v\n", err.Error())
+		//log.Printf("client.call BatchPublishMessage failed: %v\n", err.Error())
 		return
 	}
 	resMsgList := resMap["msgList"].([]interface{})
@@ -120,32 +126,32 @@ func _batchPublishMessage(client *CMQClient, topicName string, msgList, tagList 
 	return
 }
 
-func (this *Topic) ListSubscription(offset, limit int , searchWord string) (totalCount int, subscriptionList []string, err error) {
+func (this *Topic) ListSubscription(offset, limit int, searchWord string) (totalCount int, subscriptionList []string, err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = this.topicName
-	if searchWord  != "" {
+	if searchWord != "" {
 		param["searchWord "] = searchWord
 	}
-	if offset >= 0{
+	if offset >= 0 {
 		param["offset "] = strconv.Itoa(offset)
 	}
-	if limit > 0{
+	if limit > 0 {
 		param["limit "] = strconv.Itoa(limit)
 	}
 
-	resMap, err := doCall(this.client, param, "ListSubscriptionByTopic")
+	resMap, err, code := doCall(this.client, param, "ListSubscriptionByTopic")
 	if err != nil {
-		log.Printf("client.call ListSubscriptionByTopic failed: %v\n", err.Error())
+		//log.Printf("client.call ListSubscriptionByTopic failed: %v\n", err.Error())
 		return
 	}
 
 	totalCount = int(resMap["totalCount"].(float64))
 	resSubscriptionList := resMap["subscriptionList"].([]interface{})
-	for _, v := range resSubscriptionList{
+	for _, v := range resSubscriptionList {
 		subscribe := v.(map[string]interface{})
 		subscriptionList = append(subscriptionList, subscribe["subscriptionName"].(string))
 	}
 
 	return
 }
-

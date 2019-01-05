@@ -1,7 +1,6 @@
 package cmq_go
 
 import (
-	"log"
 	"strconv"
 )
 
@@ -19,21 +18,23 @@ func NewSubscription(topicName, subscriptionName string, client *CMQClient) *Sub
 	}
 }
 
-func (this *Subscription) ClearFilterTags() (err error) {
+func (this *Subscription) ClearFilterTags() (err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = this.topicName
 	param["subscriptionName "] = this.subscriptionName
 
-	_, err = doCall(this.client, param, "ClearSubscriptionFilterTags")
+	_, err, code = doCall(this.client, param, "ClearSubscriptionFilterTags")
 	if err != nil {
-		log.Printf("client.call ClearSubscriptionFilterTags failed: %v\n", err.Error())
+		//log.Printf("client.call ClearSubscriptionFilterTags failed: %v\n", err.Error())
 		return
 	}
 
 	return
 }
 
-func (this *Subscription) SetSubscriptionAttributes(meta SubscriptionMeta) (err error) {
+func (this *Subscription) SetSubscriptionAttributes(meta SubscriptionMeta) (err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = this.topicName
 	param["subscriptionName "] = this.subscriptionName
@@ -54,23 +55,24 @@ func (this *Subscription) SetSubscriptionAttributes(meta SubscriptionMeta) (err 
 		}
 	}
 
-	_, err = doCall(this.client, param, "SetSubscriptionAttributes")
+	_, err, code = doCall(this.client, param, "SetSubscriptionAttributes")
 	if err != nil {
-		log.Printf("client.call SetSubscriptionAttributes failed: %v\n", err.Error())
+		//log.Printf("client.call SetSubscriptionAttributes failed: %v\n", err.Error())
 		return
 	}
 
 	return
 }
 
-func (this *Subscription) GetSubscriptionAttributes() (meta *SubscriptionMeta, err error) {
+func (this *Subscription) GetSubscriptionAttributes() (meta *SubscriptionMeta, err error, code int) {
+	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = this.topicName
 	param["subscriptionName"] = this.subscriptionName
 
-	resMap, err := doCall(this.client, param, "GetSubscriptionAttributes")
+	resMap, err, code := doCall(this.client, param, "GetSubscriptionAttributes")
 	if err != nil {
-		log.Printf("client.call GetSubscriptionAttributes failed: %v\n", err.Error())
+		//log.Printf("client.call GetSubscriptionAttributes failed: %v\n", err.Error())
 		return
 	}
 

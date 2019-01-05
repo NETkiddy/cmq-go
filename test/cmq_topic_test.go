@@ -11,13 +11,13 @@ var endpointTopicInner = "http://cmq-topic-sh.api.tencentyun.com"
 // 创建主题
 func Test_CreateTopic(t *testing.T) {
 	account := cmq_go.NewAccount(endpointTopic, secretId, secretKey)
-	err := account.CreateTopic("topic-test-001", 2048)
+	err, _ := account.CreateTopic("topic-test-001", 2048)
 	if err != nil {
 		t.Errorf("topic-test-001 created failed, %v", err.Error())
 		return
 	}
 	t.Log("topic-test-001 created")
-	err = account.CreateTopic("topic-test-002", 4096)
+	err, _ = account.CreateTopic("topic-test-002", 4096)
 	if err != nil {
 		t.Errorf("topic-test-002 created failed, %v", err.Error())
 		return
@@ -28,7 +28,7 @@ func Test_CreateTopic(t *testing.T) {
 // 删除主题
 func Test_ListTopic(t *testing.T) {
 	account := cmq_go.NewAccount(endpointTopic, secretId, secretKey)
-	totalCount, topicList, err := account.ListTopic("", -1, -1)
+	totalCount, topicList, err, _ := account.ListTopic("", -1, -1)
 	if err != nil {
 		t.Errorf("ListTopic failed, %v", err.Error())
 		return
@@ -47,7 +47,7 @@ func Test_GetTopic(t *testing.T) {
 // 删除主题
 func Test_DeleteTopic(t *testing.T) {
 	account := cmq_go.NewAccount(endpointTopic, secretId, secretKey)
-	err := account.DeleteTopic("topic-test-001")
+	err, _ := account.DeleteTopic("topic-test-001")
 	if err != nil {
 		t.Errorf("DeleteTopic failed, %v", err.Error())
 		return
@@ -62,7 +62,7 @@ func Test_GetSetTopicAttributes(t *testing.T) {
 	topic := account.GetTopic("topic-test-001")
 	t.Logf("GetTopic, %v", *topic)
 	// get meta
-	meta, err := topic.GetTopicAttributes()
+	meta, err, _ := topic.GetTopicAttributes()
 	if err != nil {
 		t.Errorf("GetTopicAttributes failed, %v", err.Error())
 		return
@@ -72,7 +72,7 @@ func Test_GetSetTopicAttributes(t *testing.T) {
 	meta.MaxMsgSize = 32768
 	topic.SetTopicAttributes(meta.MaxMsgSize)
 	// get meta
-	newMeta, err := topic.GetTopicAttributes()
+	newMeta, err, _ := topic.GetTopicAttributes()
 	if err != nil {
 		t.Errorf("GetTopicAttributes failed, %v", err.Error())
 		return
@@ -83,7 +83,7 @@ func Test_GetSetTopicAttributes(t *testing.T) {
 // 创建订阅者
 func Test_CreateSubscribe(t *testing.T) {
 	account := cmq_go.NewAccount(endpointTopic, secretId, secretKey)
-	err := account.CreateSubscribe("topic-test-001", "sub-test", "queue-test-001", "queue", "SIMPLIFIED")
+	err, _ := account.CreateSubscribe("topic-test-001", "sub-test", "queue-test-001", "queue", "SIMPLIFIED")
 	if err != nil {
 		t.Errorf("CreateSubscribe failed, %v", err.Error())
 		return
@@ -99,7 +99,7 @@ func Test_GetSubscribe(t *testing.T) {
 	t.Logf("GetSubscription succeed: %v", sub)
 
 	// set meta
-	meta, err := sub.GetSubscriptionAttributes()
+	meta, err, _ := sub.GetSubscriptionAttributes()
 	if err != nil {
 		t.Errorf("CreateSubscribe failed, %v", err.Error())
 		return
@@ -113,7 +113,7 @@ func Test_ListSubscription(t *testing.T) {
 	topic := account.GetTopic("topic-test-001")
 	t.Logf("GetTopic, %v", topic)
 
-	totalCount, subscriptionList, err := topic.ListSubscription(-1,-1,"")
+	totalCount, subscriptionList, err, _ := topic.ListSubscription(-1, -1, "")
 	if err != nil {
 		t.Errorf("ListSubscription failed, %v", err.Error())
 		return
@@ -122,14 +122,13 @@ func Test_ListSubscription(t *testing.T) {
 	t.Logf("ListSubscription subscriptionList, %v", subscriptionList)
 }
 
-
 // 发布消息
 func Test_PublishMessage(t *testing.T) {
 	account := cmq_go.NewAccount(endpointTopic, secretId, secretKey)
 	topic := account.GetTopic("topic-test-001")
 	t.Logf("GetTopic, %v", topic)
 
-	msgId, err := topic.PublishMessage("hello world")
+	msgId, err, _ := topic.PublishMessage("hello world")
 	if err != nil {
 		t.Errorf("PublishMessage failed, %v", err.Error())
 		return
@@ -144,7 +143,7 @@ func Test_BatchPublishMessage(t *testing.T) {
 	t.Logf("GetTopic, %v", topic)
 
 	msgs := []string{"hello world", "foo", "bar"}
-	msgIds, err := topic.BatchPublishMessage(msgs)
+	msgIds, err, _ := topic.BatchPublishMessage(msgs)
 	if err != nil {
 		t.Errorf("BatchPublishMessage failed, %v", err.Error())
 		return
@@ -155,7 +154,7 @@ func Test_BatchPublishMessage(t *testing.T) {
 // 删除主题订阅者
 func Test_DeleteSubscription(t *testing.T) {
 	account := cmq_go.NewAccount(endpointTopic, secretId, secretKey)
-	err := account.DeleteSubscribe("topic-test-001","sub-test")
+	err, _ := account.DeleteSubscribe("topic-test-001", "sub-test")
 	if err != nil {
 		t.Errorf("DeleteSubscribe failed, %v", err.Error())
 		return
