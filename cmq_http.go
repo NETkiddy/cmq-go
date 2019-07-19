@@ -1,19 +1,21 @@
 package cmq_go
 
 import (
-	"net"
-	"time"
-	"net/http"
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net"
+	"net/http"
 	"net/url"
-	"bytes"
+	"time"
+	"encoding/json"
 )
 
 type CMQHttp struct {
 	timeout     int
 	isKeepAlive bool
 	conn        *http.Client
+	debugMode   bool
 }
 
 func NewCMQHttp() *CMQHttp {
@@ -21,10 +23,46 @@ func NewCMQHttp() *CMQHttp {
 		timeout:     10000,
 		isKeepAlive: true,
 		conn:        nil,
+		debugMode:   false,
 	}
 }
 
-func (this *CMQHttp) request(method, urlStr, reqStr, proxyUrlStr string, userTimeout int) (result string, err error){
+//Debug open the CMQHttp debug mode
+func (c *CMQHttp) SetDebug(b bool) {
+	c.debugMode = b
+}
+
+func (c *CMQHttp) DebugMode() bool {
+	return c.debugMode
+}
+
+type simpleHTTPReq struct {
+	Method           string
+	Proto            string // "HTTP/1.0"
+	TransferEncoding []string
+	Host             string
+	RemoteAddr       string
+	RequestURI       string
+}
+
+func genSimpleHTTPReq(r *http.Request) *simpleHTTPReq {
+	return &simpleHTTPReq{
+		Method:           r.Method,
+		Proto:            r.Proto,
+		TransferEncoding: r.TransferEncoding,
+		Host:             r.Host,
+		RemoteAddr:       r.RemoteAddr,
+		RequestURI:       r.RequestURI,
+	}
+}
+
+func printSimpleReqInfo(r *http.Request) {
+	date := time.Now().Format("2019-07-19 15:11::00")
+	info, _ := json.Marshal(genSimpleHTTPReq(r))
+	fmt.Printf("time: %s | info: %s", date, string(info))
+}
+
+func (this *CMQHttp) request(method, urlStr, reqStr, proxyUrlStr string, userTimeout int) (result string, err error) {
 	var client *http.Client
 	timeout := 0
 	if userTimeout >= 0 {
@@ -80,17 +118,20 @@ func (this *CMQHttp) request(method, urlStr, reqStr, proxyUrlStr string, userTim
 	if err != nil {
 		return "", fmt.Errorf("make http req error %v", err)
 	}
+	if this.DebugMode() {
+		printSimpleReqInfo(req)
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("http error  %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "",fmt.Errorf("http error code %d", resp.StatusCode)
+		return "", fmt.Errorf("http error code %d", resp.StatusCode)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "",fmt.Errorf("read http resp body error %v", err)
+		return "", fmt.Errorf("read http resp body error %v", err)
 	}
 	result = string(body)
 	return
