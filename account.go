@@ -3,6 +3,7 @@ package cmq_go
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"encoding/json"
 )
 
@@ -32,7 +33,7 @@ func (this *Account) setSignMethod(method string) (err error) {
 	return this.client.setSignMethod(method)
 }
 
-func (this *Account) CreateQueue(queueName string, queueMeta QueueMeta) (err error, code int) {
+func (this *Account) CreateQueue(queueName string, queueMeta QueueMeta) (err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	if queueName == "" {
@@ -60,7 +61,7 @@ func (this *Account) CreateQueue(queueName string, queueMeta QueueMeta) (err err
 		param["rewindSeconds"] = strconv.Itoa(queueMeta.RewindSeconds)
 	}
 
-	_, err, code = doCall(this.client, param, "CreateQueue")
+	_, err, code, moduleErrCode = doCall(this.client, param, "CreateQueue")
 	if err != nil {
 		//log.Printf("client.call CreateQueue failed: %v\n", err.Error())
 		return
@@ -68,7 +69,7 @@ func (this *Account) CreateQueue(queueName string, queueMeta QueueMeta) (err err
 	return
 }
 
-func (this *Account) DeleteQueue(queueName string) (err error, code int) {
+func (this *Account) DeleteQueue(queueName string) (err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	if queueName == "" {
@@ -78,7 +79,7 @@ func (this *Account) DeleteQueue(queueName string) (err error, code int) {
 	}
 	param["queueName"] = queueName
 
-	_, err, code = doCall(this.client, param, "DeleteQueue")
+	_, err, code, moduleErrCode = doCall(this.client, param, "DeleteQueue")
 	if err != nil {
 		//log.Printf("client.call DeleteQueue failed: %v\n", err.Error())
 		return
@@ -101,7 +102,7 @@ func (this *Account) ListQueue(searchWord string, offset, limit int) (
 		param["limit"] = strconv.Itoa(limit)
 	}
 
-	resMap, err, code := doCall(this.client, param, "ListQueue")
+	resMap, err, code, _ := doCall(this.client, param, "ListQueue")
 	if err != nil {
 		//log.Printf("client.call ListQueue failed: %v\n", err.Error())
 		return
@@ -123,12 +124,12 @@ func (this *Account) GetTopic(topicName string) (topic *Topic) {
 	return NewTopic(topicName, this.client)
 }
 
-func (this *Account) CreateTopic(topicName string, maxMsgSize int) (err error, code int) {
-	err, code = _createTopic(this.client, topicName, maxMsgSize, 1)
+func (this *Account) CreateTopic(topicName string, maxMsgSize int) (err error, code, moduleErrCode int) {
+	err, code, moduleErrCode = _createTopic(this.client, topicName, maxMsgSize, 1)
 	return
 }
 
-func _createTopic(client *CMQClient, topicName string, maxMsgSize, filterType int) (err error, code int) {
+func _createTopic(client *CMQClient, topicName string, maxMsgSize, filterType int) (err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	if topicName == "" {
@@ -145,7 +146,7 @@ func _createTopic(client *CMQClient, topicName string, maxMsgSize, filterType in
 	}
 	param["maxMsgSize"] = strconv.Itoa(maxMsgSize)
 
-	_, err, code = doCall(client, param, "CreateTopic")
+	_, err, code, moduleErrCode = doCall(client, param, "CreateTopic")
 	if err != nil {
 		//log.Printf("client.call CreateTopic failed: %v\n", err.Error())
 		return
@@ -153,7 +154,7 @@ func _createTopic(client *CMQClient, topicName string, maxMsgSize, filterType in
 	return
 }
 
-func (this *Account) DeleteTopic(topicName string) (err error, code int) {
+func (this *Account) DeleteTopic(topicName string) (err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	if topicName == "" {
@@ -163,7 +164,7 @@ func (this *Account) DeleteTopic(topicName string) (err error, code int) {
 	}
 	param["topicName"] = topicName
 
-	_, err, code = doCall(this.client, param, "DeleteTopic")
+	_, err, code, moduleErrCode = doCall(this.client, param, "DeleteTopic")
 	if err != nil {
 		//log.Printf("client.call DeleteTopic failed: %v\n", err.Error())
 		return
@@ -186,7 +187,7 @@ func (this *Account) ListTopic(searchWord string, offset, limit int) (
 		param["limit"] = strconv.Itoa(limit)
 	}
 
-	resMap, err, code := doCall(this.client, param, "ListTopic")
+	resMap, err, code, _ := doCall(this.client, param, "ListTopic")
 	if err != nil {
 		//log.Printf("client.call ListTopic failed: %v\n", err.Error())
 		return
@@ -201,15 +202,15 @@ func (this *Account) ListTopic(searchWord string, offset, limit int) (
 }
 
 func (this *Account) CreateSubscribe(topicName, subscriptionName, endpoint, protocol, notifyContentFormat string) (
-	err error, code int) {
-	err, code = _createSubscribe(
+	err error, code, moduleErrCode int) {
+	err, code, moduleErrCode = _createSubscribe(
 		this.client, topicName, subscriptionName, endpoint, protocol, nil, nil,
 		NotifyStrategyDefault, notifyContentFormat)
 	return
 }
 
 func _createSubscribe(client *CMQClient, topicName, subscriptionName, endpoint, protocol string, filterTag []string,
-	bindingKey []string, notifyStrategy, notifyContentFormat string) (err error, code int) {
+	bindingKey []string, notifyStrategy, notifyContentFormat string) (err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	if topicName == "" {
@@ -266,7 +267,7 @@ func _createSubscribe(client *CMQClient, topicName, subscriptionName, endpoint, 
 		}
 	}
 
-	_, err, code = doCall(client, param, "Subscribe")
+	_, err, code, moduleErrCode = doCall(client, param, "Subscribe")
 	if err != nil {
 		//log.Printf("client.call Subscribe failed: %v\n", err.Error())
 		return
@@ -274,7 +275,7 @@ func _createSubscribe(client *CMQClient, topicName, subscriptionName, endpoint, 
 	return
 }
 
-func (this *Account) DeleteSubscribe(topicName, subscriptionName string) (err error, code int) {
+func (this *Account) DeleteSubscribe(topicName, subscriptionName string) (err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	if topicName == "" {
@@ -291,7 +292,7 @@ func (this *Account) DeleteSubscribe(topicName, subscriptionName string) (err er
 	}
 	param["subscriptionName"] = subscriptionName
 
-	_, err, code = doCall(this.client, param, "Unsubscribe")
+	_, err, code, moduleErrCode = doCall(this.client, param, "Unsubscribe")
 	if err != nil {
 		//log.Printf("client.call Unsubscribe failed: %v\n", err.Error())
 		return
@@ -303,7 +304,26 @@ func (this *Account) GetSubscription(topicName, subscriptionName string) *Subscr
 	return NewSubscription(topicName, subscriptionName, this.client)
 }
 
-func doCall(client *CMQClient, param map[string]string, opration string) (resMap map[string]interface{}, err error, code int) {
+func getErrFromMessage(s string) int {
+	//the error message is like this 
+	// {
+  //   "code": "5100",
+  //   "message": "(100004)projectId不正确"
+	// }
+	if strings.ContainsAny(s, "(") && strings.ContainsAny(s, ")") {
+		start := strings.IndexByte(s, '(')
+		end := strings.IndexByte(s, ')')
+		errCode := s[start+1:end]
+		result, err := strconv.Atoi(errCode)
+		if err == nil {
+			return result
+		}
+	}
+	return 0
+}
+
+//According to the latest cmq api document, more error info about cmq is in the "message" of resp
+func doCall(client *CMQClient, param map[string]string, opration string) (resMap map[string]interface{}, err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	res, err := client.call(opration, param)
 	if err != nil {
@@ -320,6 +340,7 @@ func doCall(client *CMQClient, param map[string]string, opration string) (resMap
 	}
 	code = int(resMap["code"].(float64))
 	if code != 0 {
+		moduleErrCode = getErrFromMessage(resMap["message"].(string))
 		err = fmt.Errorf("%v failed: code: %v, message: %v, requestId: %v", opration, code, resMap["message"], resMap["requestId"])
 		//log.Printf(err.Error())
 		return

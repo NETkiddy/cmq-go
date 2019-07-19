@@ -17,7 +17,7 @@ func NewTopic(topicName string, client *CMQClient) (queue *Topic) {
 	}
 }
 
-func (this *Topic) SetTopicAttributes(maxMsgSize int) (err error, code int) {
+func (this *Topic) SetTopicAttributes(maxMsgSize int) (err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	if maxMsgSize < 1024 || maxMsgSize > 1048576 {
 		err = fmt.Errorf("Invalid parameter maxMsgSize < 1KB or maxMsgSize > 1024KB")
@@ -30,7 +30,7 @@ func (this *Topic) SetTopicAttributes(maxMsgSize int) (err error, code int) {
 		param["maxMsgSize"] = strconv.Itoa(maxMsgSize)
 	}
 
-	_, err, code = doCall(this.client, param, "SetTopicAttributes")
+	_, err, code, moduleErrCode = doCall(this.client, param, "SetTopicAttributes")
 	if err != nil {
 		//log.Printf("client.call SetTopicAttributes failed: %v\n", err.Error())
 		return
@@ -38,12 +38,12 @@ func (this *Topic) SetTopicAttributes(maxMsgSize int) (err error, code int) {
 	return
 }
 
-func (this *Topic) GetTopicAttributes() (meta TopicMeta, err error, code int) {
+func (this *Topic) GetTopicAttributes() (meta TopicMeta, err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = this.topicName
 
-	resMap, err, code := doCall(this.client, param, "GetTopicAttributes")
+	resMap, err, code, moduleErrCode := doCall(this.client, param, "GetTopicAttributes")
 	if err != nil {
 		//log.Printf("client.call GetTopicAttributes failed: %v\n", err.Error())
 		return
@@ -59,13 +59,13 @@ func (this *Topic) GetTopicAttributes() (meta TopicMeta, err error, code int) {
 	return
 }
 
-func (this *Topic) PublishMessage(message string) (msgId string, err error, code int) {
-	msgId, err, code = _publishMessage(this.client, this.topicName, message, nil, "")
+func (this *Topic) PublishMessage(message string) (msgId string, err error, code, moduleErrCode int) {
+	msgId, err, code, moduleErrCode = _publishMessage(this.client, this.topicName, message, nil, "")
 	return
 }
 
 func _publishMessage(client *CMQClient, topicName, msg string, tagList []string, routingKey string) (
-	msgId string, err error, code int) {
+	msgId string, err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = topicName
@@ -78,7 +78,7 @@ func _publishMessage(client *CMQClient, topicName, msg string, tagList []string,
 			param["msgTag."+strconv.Itoa(i+1)] = tag
 		}
 	}
-	resMap, err, code := doCall(client, param, "PublishMessage")
+	resMap, err, code, moduleErrCode := doCall(client, param, "PublishMessage")
 	if err != nil {
 		//log.Printf("client.call GetTopicAttributes failed: %v\n", err.Error())
 		return
@@ -88,13 +88,13 @@ func _publishMessage(client *CMQClient, topicName, msg string, tagList []string,
 	return
 }
 
-func (this *Topic) BatchPublishMessage(msgList []string) (msgIds []string, err error, code int) {
-	msgIds, err, code = _batchPublishMessage(this.client, this.topicName, msgList, nil, "")
+func (this *Topic) BatchPublishMessage(msgList []string) (msgIds []string, err error, code, moduleErrCode int) {
+	msgIds, err, code, moduleErrCode = _batchPublishMessage(this.client, this.topicName, msgList, nil, "")
 	return
 }
 
 func _batchPublishMessage(client *CMQClient, topicName string, msgList, tagList []string, routingKey string) (
-	msgIds []string, err error, code int) {
+	msgIds []string, err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = topicName
@@ -112,7 +112,7 @@ func _batchPublishMessage(client *CMQClient, topicName string, msgList, tagList 
 		}
 	}
 
-	resMap, err, code := doCall(client, param, "BatchPublishMessage")
+	resMap, err, code, moduleErrCode := doCall(client, param, "BatchPublishMessage")
 	if err != nil {
 		//log.Printf("client.call BatchPublishMessage failed: %v\n", err.Error())
 		return
@@ -126,7 +126,7 @@ func _batchPublishMessage(client *CMQClient, topicName string, msgList, tagList 
 	return
 }
 
-func (this *Topic) ListSubscription(offset, limit int, searchWord string) (totalCount int, subscriptionList []string, err error, code int) {
+func (this *Topic) ListSubscription(offset, limit int, searchWord string) (totalCount int, subscriptionList []string, err error, code, moduleErrCode int) {
 	code = DEFAULT_ERROR_CODE
 	param := make(map[string]string)
 	param["topicName"] = this.topicName
@@ -140,7 +140,7 @@ func (this *Topic) ListSubscription(offset, limit int, searchWord string) (total
 		param["limit "] = strconv.Itoa(limit)
 	}
 
-	resMap, err, code := doCall(this.client, param, "ListSubscriptionByTopic")
+	resMap, err, code, moduleErrCode := doCall(this.client, param, "ListSubscriptionByTopic")
 	if err != nil {
 		//log.Printf("client.call ListSubscriptionByTopic failed: %v\n", err.Error())
 		return
