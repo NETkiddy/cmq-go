@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"encoding/json"
+	"net/http"
 )
 
 const (
@@ -20,12 +21,19 @@ func NewAccount(endpoint, secretId, secretKey string) *Account {
 	}
 }
 
-func (this *Account) SetProxy(proxyUrl string) {
+func (this *Account) SetProxy(proxyUrl string) *Account{
 	this.client.setProxy(proxyUrl)
+	return this
 }
 
-func (this *Account) UnsetProxy() {
+func (this *Account) UnsetProxy() *Account{
 	this.client.unsetProxy()
+	return this
+}
+
+func (this *Account) SetTransport(transport http.RoundTripper) *Account{
+	this.client.CmqHttp.SetTransport(transport)
+	return this
 }
 
 func (this *Account) setSignMethod(method string) (err error) {

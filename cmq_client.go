@@ -21,7 +21,6 @@ type CMQClient struct {
 	SecretKey  string
 	Method     string
 	SignMethod string
-	Proxy      string
 	CmqHttp    *CMQHttp
 }
 
@@ -48,12 +47,12 @@ func (this *CMQClient) setSignMethod(signMethod string) (err error) {
 }
 
 func (this *CMQClient) setProxy(proxyUrl string) {
-	this.Proxy = proxyUrl
+	this.CmqHttp.setProxy(proxyUrl)
 	return
 }
 
 func (this *CMQClient) unsetProxy() {
-	this.Proxy = ""
+	this.CmqHttp.unsetProxy()
 	return
 }
 
@@ -121,10 +120,6 @@ func (this *CMQClient) call(action string, param map[string]string) (resp string
 	//log.Printf("urlStr :%v", urlStr)
 	//log.Printf("reqStr :%v", reqStr)
 
-	proxyUrlStr := this.Proxy
-	if proxyUrl, found := param["proxyUrl"]; found {
-		proxyUrlStr = proxyUrl
-	}
 	userTimeout := 0
 	if UserpollingWaitSeconds, found := param["UserpollingWaitSeconds"]; found {
 		userTimeout, err = strconv.Atoi(UserpollingWaitSeconds)
@@ -133,7 +128,7 @@ func (this *CMQClient) call(action string, param map[string]string) (resp string
 		}
 	}
 
-	resp, err = this.CmqHttp.request(this.Method, urlStr, reqStr, proxyUrlStr, userTimeout)
+	resp, err = this.CmqHttp.request(this.Method, urlStr, reqStr, userTimeout)
 	if err != nil {
 		return resp, fmt.Errorf("CmqHttp.request failed: %v", err.Error())
 	}
